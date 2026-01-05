@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAKE NEWS DETECTION SYSTEM</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Matrix Rain Canvas -->
+    <canvas id="matrixCanvas"></canvas>
+    
+    <!-- Scanline Overlay -->
+    <div class="scanlines"></div>
+    
+    <!-- Main Container -->
+    <div class="terminal-container">
+        <!-- Header -->
+        <header class="terminal-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="blink">>_</span>
+                    <span class="title">FAKE NEWS DETECTION SYSTEM</span>
+                </div>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">ONLINE</span>
+                </div>
+            </div>
+            <div class="header-decoration">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="terminal-main">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="section-label">
+                    <span class="prompt">>></span> INPUT_NEWS_TEXT
+                </div>
+                <textarea 
+                    id="newsInput" 
+                    class="terminal-input" 
+                    placeholder="Enter news article text to analyze..."
+                    rows="6"
+                ></textarea>
+                <button id="analyzeBtn" class="terminal-button">
+                    <span class="btn-text">>> ANALYZE_NEURAL_NETWORK</span>
+                    <span class="btn-loader"></span>
+                </button>
+            </section>
+
+            <!-- Result Section -->
+            <section class="result-section">
+                <div class="section-label">
+                    <span class="prompt">>></span> NEURAL_NETWORK_OUTPUT
+                </div>
+                
+                <!-- Default State -->
+                <div id="defaultState" class="result-content">
+                    <div class="placeholder-text">
+                        <span class="prompt">>></span> WAITING_FOR_INPUT...
+                    </div>
+                    <div class="placeholder-hint">
+                        [Enter text above and press ANALYZE to scan for fake news]
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="result-content hidden">
+                    <div class="loading-animation">
+                        <div class="loading-text">
+                            <span class="blink">_</span> PROCESSING NEURAL NETWORK...
+                        </div>
+                        <div class="loading-bar">
+                            <div class="loading-progress"></div>
+                        </div>
+                        <div class="loading-info">
+                            <span id="loadingStep">Extracting TF-IDF features...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result State - FAKE -->
+                <div id="fakeResult" class="result-content result-fake hidden">
+                    <div class="result-header">
+                        <span class="result-label">DETECTION RESULT:</span>
+                    </div>
+                    <div class="result-main">
+                        <div class="result-badge fake-badge">
+                            <span class="badge-icon">⚠</span>
+                            <span class="badge-text">FAKE NEWS</span>
+                            <span class="badge-icon">⚠</span>
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-row">
+                            <span class="detail-label">CONFIDENCE:</span>
+                            <span id="fakeConfidence" class="detail-value confidence-high">0%</span>
+                        </div>
+                        <div class="detail-bar">
+                            <div id="fakeConfidenceBar" class="confidence-bar fake"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result State - REAL -->
+                <div id="realResult" class="result-content result-real hidden">
+                    <div class="result-header">
+                        <span class="result-label">DETECTION RESULT:</span>
+                    </div>
+                    <div class="result-main">
+                        <div class="result-badge real-badge">
+                            <span class="badge-icon">✓</span>
+                            <span class="badge-text">REAL NEWS</span>
+                            <span class="badge-icon">✓</span>
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-row">
+                            <span class="detail-label">CONFIDENCE:</span>
+                            <span id="realConfidence" class="detail-value confidence-high">0%</span>
+                        </div>
+                        <div class="detail-bar">
+                            <div id="realConfidenceBar" class="confidence-bar real"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="result-content error-state hidden">
+                    <div class="error-header">
+                        <span class="error-icon">!</span> SYSTEM ERROR
+                    </div>
+                    <div id="errorMessage" class="error-message">
+                        An error occurred during analysis.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <div class="section-label">
+                    <span class="prompt">>></span> SYSTEM_STATISTICS
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">MODEL_STATUS:</span>
+                        <span id="modelStatus" class="stat-value loading">LOADING...</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">ALGORITHM:</span>
+                        <span class="stat-value">TF-IDF + LOGISTIC_REGRESSION</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">ANALYSES_RUN:</span>
+                        <span id="analysisCount" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">API_STATUS:</span>
+                        <span id="apiStatus" class="stat-value loading">CONNECTING...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="terminal-footer">
+            <div class="footer-decoration">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
+            <div class="footer-content">
+                <span class="footer-text">>> MATRIX_NEURAL_NETWORK v1.0.0</span>
+                <span class="footer-spacer"></span>
+                <span class="footer-text blink">_</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
