@@ -6,14 +6,19 @@ FastAPI backend with ML prediction
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import joblib
 import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import os
+from model_inference import SimpleInference
 
-# Download required NLTK data
+# Set NLTK data path to local directory
+nltk_data_path = os.path.join(os.path.dirname(__file__), "nltk_data")
+if os.path.exists(nltk_data_path):
+    nltk.data.path.append(nltk_data_path)
+
+# Download required NLTK data (will skip if already in nltk_data_path)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -44,8 +49,7 @@ stemmer = PorterStemmer()
 stop_words = set(stopwords.words('english'))
 
 # Load model
-MODEL_PATH = "fake_news_model.joblib"
-VECTORIZER_PATH = "tfidf_vectorizer.joblib"
+MODEL_DATA_PATH = "model_data.json"
 
 def preprocess_text(text):
     """Preprocess text like the training pipeline"""
@@ -67,13 +71,16 @@ def preprocess_text(text):
     return ' '.join(tokens)
 
 try:
-    model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VECTORIZER_PATH)
-    MODEL_LOADED = True
-    print(">>> MODEL LOADED SUCCESSFULLY <<<")
-except FileNotFoundError:
+    if os.path.exists(MODEL_DATA_PATH):
+        model_inference = SimpleInference(MODEL_DATA_PATH)
+        MODEL_LOADED = True
+        print(">>> MODEL DATA LOADED SUCCESSFULLY <<<")
+    else:
+        MODEL_LOADED = False
+        print("!!! MODEL DATA NOT FOUND - Run export_model.py first !!!")
+except Exception as e:
     MODEL_LOADED = False
-    print("!!! MODEL NOT FOUND - Run train_model.py first !!!")
+    print(f"!!! ERROR LOADING MODEL DATA: {e} !!!")
 
 class PredictionRequest(BaseModel):
     text: str
@@ -102,7 +109,7 @@ async def status():
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_news(request: PredictionRequest):
     if not MODEL_LOADED:
-        raise HTTPException(status_code=503, detail="Model not loaded. Please train the model first.")
+        raise HTTPException(status_code=503, detail="Model not loaded. Please train and export the model first.")
     
     if not request.text or request.text.strip() == "":
         raise HTTPException(status_code=400, detail="Input text cannot be empty")
@@ -113,12 +120,8 @@ async def predict_news(request: PredictionRequest):
     if not processed_text:
         raise HTTPException(status_code=400, detail="Invalid text after preprocessing")
     
-    # Vectorize
-    text_vector = vectorizer.transform([processed_text])
-    
-    # Predict
-    prediction = model.predict(text_vector)[0]
-    probabilities = model.predict_proba(text_vector)[0]
+    # Predict using SimpleInference
+    prediction, probabilities = model_inference.transform_and_predict(processed_text)
     
     # Map prediction
     label = "REAL" if prediction == 1 else "FAKE"
