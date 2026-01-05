@@ -170,6 +170,29 @@ def train_model():
     joblib.dump(model, "fake_news_model.joblib")
     joblib.dump(vectorizer, "tfidf_vectorizer.joblib")
     
+    # Export for optimized serverless deployment
+    print(">>> STEP 8: EXPORTING FOR OPTIMIZED DEPLOYMENT <<<")
+    try:
+        import json
+        model_data = {
+            "weights": model.coef_[0].tolist(),
+            "intercept": float(model.intercept_[0]),
+            "vocabulary": {str(k): int(v) for k, v in vectorizer.vocabulary_.items()},
+            "idf": vectorizer.idf_.tolist(),
+            "params": {
+                "ngram_range": vectorizer.ngram_range,
+                "norm": vectorizer.norm,
+                "use_idf": vectorizer.use_idf,
+                "smooth_idf": vectorizer.smooth_idf,
+                "sublinear_tf": vectorizer.sublinear_tf
+            }
+        }
+        with open("model_data.json", "w") as f:
+            json.dump(model_data, f)
+        print(">>> EXPORTED TO: model_data.json <<<")
+    except Exception as e:
+        print(f"!!! EXPORT FAILED: {e} !!!")
+    
     print("\n=== TRAINING COMPLETE ===")
     print(">>> MODEL SAVED TO: fake_news_model.joblib <<<")
     print(">>> VECTORIZER SAVED TO: tfidf_vectorizer.joblib <<<")
